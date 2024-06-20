@@ -1,0 +1,75 @@
+services:
+    app:
+        build:
+            dockerfile: Dockerfile
+            context: .
+        container_name: laravel-app
+        environment:
+            - PHP_OPCACHE_ENABLE=1
+            - AUTORUN_ENABLED=true
+            - AUTORUN_LARAVEL_MIGRATION_ISOLATION=true
+        env_file:
+            - .env.production
+        ports:
+            - "8080:8080"
+        networks:
+            - laravel
+        depends_on:
+            - mysql
+            - redis
+            - mailpit
+    mysql:
+        image: "mysql/mysql-server:8.0"
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_ROOT_HOST: "%"
+            MYSQL_DATABASE: laravel
+            MYSQL_USER: laravel
+            MYSQL_PASSWORD: password
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        volumes:
+            - "laravel-mysql:/var/lib/mysql"
+        networks:
+            - laravel
+    redis:
+        image: "redis:alpine"
+        volumes:
+            - "laravel-redis:/data"
+        networks:
+            - laravel
+        healthcheck:
+            test:
+                - CMD
+                - redis-cli
+                - ping
+            retries: 3
+            timeout: 5s
+    mailpit:
+        image: "axllent/mailpit:latest"
+        ports:
+            - "1025:1025"
+            - "8025:8025"
+        networks:
+            - laravel
+    phpmyadmin:
+        image: "phpmyadmin:latest"
+        ports:
+            - "${FORWARD_PMA_PORT:-8085}:80"
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+            UPLOAD_LIMIT: 100M
+        networks:
+            - laravel
+        depends_on:
+            - mysql
+
+networks:
+    laravel:
+        driver: bridge
+
+volumes:
+    laravel-mysql:
+        driver: local
+    laravel-redis:
+        driver: local
