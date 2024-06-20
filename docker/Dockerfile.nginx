@@ -1,0 +1,11 @@
+FROM nginx:mainline-bookworm
+
+RUN apt-get update && apt-get install -y vim iputils-ping
+RUN apt-get autoremove && apt-get autoclean
+
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/fastcgi_params /etc/nginx/fastcgi_params
+COPY nginx/conf.d/gzip.conf /etc/nginx/conf.d/gzip.conf
+COPY nginx/conf.d/uploads.conf /etc/nginx/conf.d/uploads.conf
+COPY nginx/conf.d/timeout.conf /etc/nginx/conf.d/timeout.conf
+COPY nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
